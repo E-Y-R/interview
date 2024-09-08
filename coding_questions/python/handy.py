@@ -917,6 +917,60 @@ def longestValidParentheses(s):
     return max_len
 
 
+def minOperationsToFlip(s):
+    """
+    https://leetcode.com/problems/minimum-cost-to-change-the-final-value-of-expression/
+    Input: expression = "1&(0|1)"
+    Output: 1
+    Explanation: We can turn "1&(0|1)" into "1&(0&1)" by changing the '|' to a '&' using 1 operation.
+    The new expression evaluates to 0.
+    """
+    jump = {}
+    stack = []
+    for i, c in enumerate(s):
+        if c == '(':
+            stack.append(i)
+        elif c == ')':
+            jump[i] = stack.pop()
+
+    def change(i, j):
+        if jump.get(j) == i:
+            return change(i + 1, j - 1)
+        if i == j:
+            return int(s[i]), 1
+        k = jump[j] if j in jump else j
+        l, cl = change(i, k - 2)
+        r, cr = change(k, j)
+        return (l & r if s[k - 1] == '&' else l | r,
+                1 if l != r else min(cl, cr) + (l == 1 and s[k - 1] == '|' or l == 0 and s[k - 1] == '&'))
+
+    def stk_soln(s):
+        
+        def _merge(t1, t2, op):
+            return (eval(f"{t1[0]}{op}{t2[0]}"),
+                    1 if t1[0] != t2[0] else min(t1[1], t2[1]) + ((op == "&" and t1[0] == 0) or (op == "|" and t1[0] == 1)))
+        
+        stk = []
+        ops = ["&", "|"]
+        for c in s:
+            if c == "(" or c in ops:
+                stk.append(c)
+                continue
+            if c == ")":
+                t2 = stk.pop()
+                assert stk.pop() == "(", "mistake"
+            else:
+                t2 = (int(c), 1)
+            if stk and stk[-1] in ops:
+                op = stk.pop()
+                t1 = stk.pop()
+                t2 = _merge(t1, t2, op)
+            stk.append(t2)
+        return stk[-1]
+
+    return change(0, len(s) - 1)[1]
+
+
 def medianOfStream(arr):
     import heapq
     a, b = min(arr[:2]), max(arr[:2])
@@ -2739,7 +2793,7 @@ def catAndMouse(graph):
     def catMouseGame_dfs_td(graph: List[List[int]]) -> int:
         # not working for new test cases on leetcode possibly with cycle!
         # dfs cannot solve this problem for all edge cases
-        @functools.lru_cache(None)
+        @cache
         def helper(turn, cat, mouse):
             if turn == 0:
                 return 0
@@ -2784,7 +2838,7 @@ def catAndMouse(graph):
                     yield m2, c, 3-t
             else:
                 for c2 in graph[c]:
-                    if c2:
+                    if c2 > 0:
                         yield m, c2, 3-t
 
         DRAW, MOUSE, CAT = 0, 1, 2
@@ -2848,7 +2902,6 @@ def numPermsDISequence(self, s: str) -> int:
     return sum(fn(0, x) for x in range(len(s) + 1)) % 1_000_000_007
 
 
-# Problem Name is &&& Election &&& PLEASE DO NOT REMOVE THIS LINE.
 def whoIsElected(n, k):
     """
     A group of students are sitting in a circle. The teacher is electing a new class president.
@@ -2888,60 +2941,7 @@ def whoIsElected(n, k):
         return survivor + 1  # Convert from 0-based to 1-based index
 
 
-def minOperationsToFlip(s):
-    """
-    https://leetcode.com/problems/minimum-cost-to-change-the-final-value-of-expression/
-    Input: expression = "1&(0|1)"
-    Output: 1
-    Explanation: We can turn "1&(0|1)" into "1&(0&1)" by changing the '|' to a '&' using 1 operation.
-    The new expression evaluates to 0.
-    """
-    jump = {}
-    stack = []
-    for i, c in enumerate(s):
-        if c == '(':
-            stack.append(i)
-        elif c == ')':
-            jump[i] = stack.pop()
-
-    @functools.lru_cache(None)
-    def change(i, j):
-        if jump.get(j) == i:
-            return change(i + 1, j - 1)
-        if i == j:
-            return int(s[i]), 1
-        k = jump[j] if j in jump else j
-        l, cl = change(i, k - 2)
-        r, cr = change(k, j)
-        return (l & r if s[k - 1] == '&' else l | r,
-                1 if l != r else min(cl, cr) + (l == 1 and s[k - 1] == '|' or l == 0 and s[k - 1] == '&'))
-
-    def stk_soln(s):
-        def _merge(t1, t2, op):
-            return op(t1[0], t2[0]), 1 if t1[0] != t2[0] else min(t1[1], t2[1]) + ((op == "&" and val == 0) or
-                                                                                   (op == "|" and val == 1))
-        import operator
-        ops = {"&": operator.and_, "|": operator.or_}
-        stk = []
-        for c in s:
-            if c == "(" or c in ops:
-                stk.append(c)
-                continue
-            if c == ")":
-                t2 = stk.pop()
-                assert stk.pop() == "(", "mistake"
-            else:
-                t2 = (int(c), 1)
-            if stk and stk[-1] in ops:
-                op = ops[stk.pop()]
-                t1 = stk.pop()
-                t2 = _merge(t1, t2, op)
-            stk.append(t2)
-        return stk[-1]
-
-    return change(0, len(s) - 1)[1]
-
-
+"""other"""
 def matchIntervieweeInterviewer(interivew_time, interviewers, interviewees):
     '''
     """
@@ -2968,9 +2968,9 @@ def matchIntervieweeInterviewer(interivew_time, interviewers, interviewees):
 
     #
     '''
+    pass
 
 
-"""other"""
 #https://www.hackerrank.com/challenges/the-quickest-way-up/problem
 # https://leetcode.com/problems/largest-component-size-by-common-factor/
 # https://leetcode.com/problems/verbal-arithmetic-puzzle/discuss/463921/python-backtracking-with-pruning-tricks
